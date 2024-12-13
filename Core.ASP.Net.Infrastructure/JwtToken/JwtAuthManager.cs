@@ -1,5 +1,8 @@
 ﻿using Core.ASP.Net.Infrastructure.JwtToken.Abstractions;
 using Core.ASP.Net.Infrastructure.JwtToken.Models;
+using Core.Contract.Application.Jwt;
+using Core.Contract.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
@@ -17,11 +20,14 @@ public class JwtAuthManager : IJwtAuthManager
     private readonly JwtTokenConfig _jwtTokenConfig;
     private readonly byte[] _secret;
 
-    public JwtAuthManager(JwtTokenConfig jwtTokenConfig)
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+
+    public JwtAuthManager(JwtTokenConfig jwtTokenConfig, IServiceScopeFactory serviceScopeFactory)
     {
         _jwtTokenConfig = jwtTokenConfig;
         _usersRefreshTokens = new ConcurrentDictionary<string, RefreshToken>();
         _secret = Encoding.ASCII.GetBytes(jwtTokenConfig.Secret);
+        _serviceScopeFactory = serviceScopeFactory;
     }
 
     // optional: clean up expired refresh tokens
@@ -32,6 +38,12 @@ public class JwtAuthManager : IJwtAuthManager
         {
             _usersRefreshTokens.TryRemove(expiredToken.Key, out _);
         }
+
+        using (var scope = _serviceScopeFactory.CreateScope())
+        {
+            var refreshTokenService = scope.ServiceProvider.GetRequiredService<IJwtRefreshTokenService>();
+            refreshTokenService.CleanupExpiredTokens();
+        }
     }
 
     // can be more specific to ip, user agent, device name, etc.
@@ -41,6 +53,12 @@ public class JwtAuthManager : IJwtAuthManager
         foreach (var refreshToken in refreshTokens)
         {
             _usersRefreshTokens.TryRemove(refreshToken.Key, out _);
+        }
+
+        using (var scope = _serviceScopeFactory.CreateScope())
+        {
+            var refreshTokenService = scope.ServiceProvider.GetRequiredService<IJwtRefreshTokenService>();
+            refreshTokenService.RemoveRefreshTokensByUsername(userName);
         }
     }
 
@@ -55,13 +73,22 @@ public class JwtAuthManager : IJwtAuthManager
             signingCredentials: new SigningCredentials(new SymmetricSecurityKey(_secret), SecurityAlgorithms.HmacSha256Signature));
         var accessToken = new JwtSecurityTokenHandler().WriteToken(jwtToken);
 
+        Int32.TryParse(claims.Where(x => x.Type == "UserId").FirstOrDefault().Value, out int userId);
+
         var refreshToken = new RefreshToken
         {
+            UserId = userId,
             UserName = username,
             Token = GenerateRefreshTokenString(),
             ExpiryDate = now.AddMinutes(_jwtTokenConfig.RefreshTokenExpiration)
         };
         _usersRefreshTokens.AddOrUpdate(refreshToken.Token, refreshToken, (_, _) => refreshToken);
+
+        using (var scope = _serviceScopeFactory.CreateScope())
+        {
+            var refreshTokenService = scope.ServiceProvider.GetRequiredService<IJwtRefreshTokenService>();
+            refreshTokenService.GenerateRefreshToken(refreshToken);
+        }
 
         return new JwtAuthResult
         {
@@ -86,6 +113,15 @@ public class JwtAuthManager : IJwtAuthManager
         if (existingRefreshToken.UserName != userName || existingRefreshToken.ExpiryDate < now)
         {
             throw new SecurityTokenException("Invalid token");
+        }
+
+        using (var scope = _serviceScopeFactory.CreateScope())
+        {
+            var refreshTokenService = scope.ServiceProvider.GetRequiredService<IJwtRefreshTokenService>();
+            if (!refreshTokenService.ValidateRefreshToken(refreshToken, userName))
+                throw new SecurityTokenException("Invalid Token");
+
+            refreshTokenService.RevokeRefreshToken(refreshToken);
         }
 
         return GenerateTokens(userName, principal.Claims.ToArray(), now); // need to recover the original claims

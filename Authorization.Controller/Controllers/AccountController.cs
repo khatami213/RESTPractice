@@ -30,7 +30,7 @@ public class AccountController : ControllerBase
     }
 
     [AllowAnonymous]
-    [HttpPost("login")]
+    [HttpPost("login1")]
     public async Task<ActionResult> Login([FromBody] LoginCommand command)
     {
         var result = await _commandService.ProcessResult<LoginCommand, LoginResult>(command);
@@ -49,46 +49,45 @@ public class AccountController : ControllerBase
     //    });
     //}
 
-    [HttpPost("logout")]
-    public ActionResult Logout()
-    {
-        // optionally "revoke" JWT token on the server side --> add the current token to a block-list
-        // https://github.com/auth0/node-jsonwebtoken/issues/375
+    //[HttpPost("logout")]
+    //public ActionResult Logout()
+    //{
+    //    // optionally "revoke" JWT token on the server side --> add the current token to a block-list
+    //    // https://github.com/auth0/node-jsonwebtoken/issues/375
 
-        var userName = User.Identity?.Name;
-        _jwtAuthManager.RemoveRefreshTokenByUserName(userName);
-        //_logger.LogInformation($"User [{userName}] logged out the system.");
-        return Ok();
-    }
+    //    var userName = User.Identity?.Name;
+    //    _jwtAuthManager.RemoveRefreshTokenByUserName(userName);
+    //    return Ok();
+    //}
 
     //[AllowAnonymous]
-    [HttpPost("refresh-token")]
-    public async Task<ActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
-    {
-        try
-        {
-            var userName = User.Identity?.Name;
-            //_logger.LogInformation($"User [{userName}] is trying to refresh JWT token.");
+    //[HttpPost("refresh-token")]
+    //public async Task<ActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+    //{
+    //    try
+    //    {
+    //        var userName = User.Identity?.Name;
+    //        //_logger.LogInformation($"User [{userName}] is trying to refresh JWT token.");
 
-            if (string.IsNullOrWhiteSpace(request.RefreshToken))
-                return Unauthorized();
+    //        if (string.IsNullOrWhiteSpace(request.RefreshToken))
+    //            return Unauthorized();
 
-            var accessToken = await HttpContext.GetTokenAsync("Bearer", "access_token");
-            var jwtResult = _jwtAuthManager.Refresh(request.RefreshToken, accessToken, DateTime.Now);
-            //_logger.LogInformation($"User [{userName}] has refreshed JWT token.");
-            return Ok(new LoginResult
-            {
-                //Username = userName,
-                //Role = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty,
-                AccessToken = jwtResult.AccessToken,
-                RefreshToken = jwtResult.RefreshToken
-            });
-        }
-        catch (SecurityTokenException e)
-        {
-            return Unauthorized(e.Message); // return 401 so that the client side can redirect the user to login page
-        }
-    }
+    //        var accessToken = await HttpContext.GetTokenAsync("Bearer", "access_token");
+    //        var jwtResult = _jwtAuthManager.Refresh(request.RefreshToken, accessToken, DateTime.Now);
+    //        //_logger.LogInformation($"User [{userName}] has refreshed JWT token.");
+    //        return Ok(new LoginResult
+    //        {
+    //            //Username = userName,
+    //            //Role = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty,
+    //            AccessToken = jwtResult.AccessToken,
+    //            RefreshToken = jwtResult.RefreshToken
+    //        });
+    //    }
+    //    catch (SecurityTokenException e)
+    //    {
+    //        return Unauthorized(e.Message); // return 401 so that the client side can redirect the user to login page
+    //    }
+    //}
 
     //[HttpPost("impersonation")]
     //[Authorize(Roles = "admin")]

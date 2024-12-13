@@ -1,5 +1,6 @@
 ﻿using Core.ASP.Net.Infrastructure.JwtToken.Abstractions;
 using Core.ASP.Net.Infrastructure.JwtToken.Models;
+using Core.Contract.Application.Jwt;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Logging;
@@ -37,6 +38,7 @@ public static class JwtTokenExtension
         IdentityModelEventSource.ShowPII = true;
 
         services.AddSingleton<IJwtAuthManager, JwtAuthManager>();
+        services.AddScoped<IJwtRefreshTokenService, JwtRefreshTokenService>();
         services.AddHostedService<JwtRefreshTokenCache>();
 
         return services;

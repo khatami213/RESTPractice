@@ -5,11 +5,15 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
 namespace Authentication.Controllers;
 
+[Authorize]
+[Route("api/[controller]")]
+[ApiController]
 public class AccountController : ControllerBase
 {
     private readonly ILogger<AccountController> _logger;
@@ -72,7 +76,6 @@ public class AccountController : ControllerBase
     //}
 
     [HttpPost("logout")]
-    [Authorize]
     public ActionResult Logout()
     {
         // optionally "revoke" JWT token on the server side --> add the current token to a block-list
@@ -86,7 +89,6 @@ public class AccountController : ControllerBase
 
     //[AllowAnonymous]
     [HttpPost("refresh-token")]
-    [Authorize]
     public async Task<ActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
     {
         try

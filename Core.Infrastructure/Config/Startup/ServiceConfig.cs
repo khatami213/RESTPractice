@@ -10,6 +10,7 @@ using Core.Application.Queries;
 using Core.Application.Validations;
 using Core.Contract.Application.Commands;
 using Core.Contract.Application.Events;
+using Core.Contract.Application.Jwt;
 using Core.Contract.Application.Queries;
 using Core.Contract.Application.Validations;
 using Core.Contract.Errors;
@@ -19,6 +20,7 @@ using Core.Contract.Mapper;
 using Core.Contract.RequestInfos;
 using Core.Contract.ServiceLocators;
 using Core.EF.Infrastracture.Application.Events;
+using Core.EF.Infrastracture.Application.RefreshTokens;
 using Core.EF.Infrastracture.EF;
 using Core.EF.Infrastracture.UnitOfWorks;
 using Core.Factories;
@@ -50,6 +52,7 @@ public static class ServiceConfig
         services.AddScoped<IQueryHandlerFactory, QueryHandlerFactory>();
         services.AddScoped<ICommandHandlerDecoratorFactory, CommandHandlerDecoratorFactory>();
         services.AddScoped<IEventRepository, EventRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>(sp =>
         {
             var context = sp.GetRequiredService<CoreDbContext>();
