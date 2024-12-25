@@ -17,5 +17,5 @@ public interface IWriteRepository<T> : IRepository where T : class
 public interface IReadRepository<T> : IRepository where T : class
 {
     Task<T?> GetById(long id, params Expression<Func<T, object>>[] includes);
-    Task<IReadOnlyList<T?>> GetAll();
+    Task<IReadOnlyList<T?>> GetAll(params Expression<Func<T, object>>[] includes);
 }

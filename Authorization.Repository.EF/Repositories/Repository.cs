@@ -49,9 +49,14 @@ public class ReadRepository<T> : IReadRepository<T> where T : class
         _dbSet = context.Set<T>();
     }
 
-    public virtual async Task<IReadOnlyList<T?>> GetAll()
+    public virtual async Task<IReadOnlyList<T?>> GetAll(params Expression<Func<T, object>>[] includes)
     {
-        return await _dbSet.ToListAsync();
+        IQueryable<T> query = _dbSet;
+
+        if (includes.Count() != 0)
+            query = includes.Aggregate(query, (current, include) => current.Include(include));
+
+        return await query.ToListAsync();
     }
 
     public virtual async Task<T?> GetById(long id, params Expression<Func<T, object>>[] includes)

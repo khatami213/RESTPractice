@@ -11,7 +11,7 @@ public class MainDataReadDbContext : CoreDbContext
     public DbSet<UserReadModel> Users { get; set; }
     public DbSet<RoleReadModel> Roles { get; set; }
     public DbSet<UserRoleReadModel> UserRoles { get; set; }
-
+    public DbSet<ProjectReadModel> Projects { get; set; }
     public MainDataReadDbContext(DbContextOptions<MainDataReadDbContext> dbContextOptions) : base(dbContextOptions)
     {
     }
@@ -26,6 +26,8 @@ public class MainDataReadDbContext : CoreDbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(UserReadMapping).Assembly);
         modelBuilder.Ignore<User>();
         modelBuilder.Ignore<Role>();
+        modelBuilder.Ignore<Permission>();
+        modelBuilder.Ignore<Project>();
         base.OnModelCreating(modelBuilder);
     }
 }

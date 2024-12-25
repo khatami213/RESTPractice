@@ -2,7 +2,7 @@
 using Authorization.Command.Contract.Commands.Users;
 using Authorization.Command.Contract.Events.Users;
 using Authorization.Domain.Models.WriteModels.Users;
-using Authorization.Domain.Repositories;
+using Authorization.Domain.Repositories.Users;
 using Core.Application.Commands;
 using Core.Contract.Application.Commands;
 using Core.Contract.RequestInfos;

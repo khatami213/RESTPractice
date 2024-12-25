@@ -1,6 +1,6 @@
 ﻿using Authorization.Domain.Models.ReadModels.Users;
 using Authorization.Domain.Models.WriteModels.Users;
-using Authorization.Domain.Repositories;
+using Authorization.Domain.Repositories.Users;
 using Authorization.Query.Contract.Dtos.Users;
 using Authorization.Query.Contract.Queries.Users;
 using Core.Application.Queries;

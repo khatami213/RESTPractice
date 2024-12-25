@@ -4,4 +4,5 @@ public class RoleReadModel : BaseEntity
 {
     public string Name { get; set; }
     public List<UserReadModel> Users { get; set; }
+    public List<PermissionReadModel> Permissions { get; set; }
 }

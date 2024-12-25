@@ -1,6 +1,6 @@
 ﻿using Authorization.Domain.Models.ReadModels.Users;
 using Authorization.Domain.Models.WriteModels.Users;
-using Authorization.Domain.Repositories;
+using Authorization.Domain.Repositories.Users;
 using Core.Contract.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -40,8 +40,8 @@ public class UserReadRepository : ReadRepository<UserReadModel>, IUserReadReposi
         return await query.FirstOrDefaultAsync();
     }
 
-    public async Task<UserReadModel?> GetWithRoles(long userId)
+    public async Task<UserReadModel?> GetWithRolesPermissions(string username)
     {
-        return await _context.Users.Include(x => x.Roles).Where(x => x.Id == userId).FirstOrDefaultAsync();
+        return await _context.Users.Include(u => u.Projects).Include(u => u.Roles).ThenInclude(r => r.Permissions).Where(x => x.Username == username).FirstOrDefaultAsync();
     }
 }

@@ -22,8 +22,8 @@ public static class AuthorizationExtentions
         var authorizeConfig = builder.Configuration.GetSection("AuthorizeConfig").Get<AuthorizeConfigOptions>();
         builder.Services.AddSingleton(authorizeConfig);
 
-        builder.Services.AddSingleton<IJwtAuthManager, JwtAuthManager>();
-        builder.Services.AddHostedService<JwtRefreshTokenCache>();
+        //builder.Services.AddSingleton<IJwtAuthManager, JwtAuthManager>();
+        //builder.Services.AddHostedService<JwtRefreshTokenCache>();
 
         if (authorizeConfig.AuthorizeType == "BasicAuthentication")
         {

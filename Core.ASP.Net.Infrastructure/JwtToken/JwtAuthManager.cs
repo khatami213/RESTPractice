@@ -66,9 +66,9 @@ public class JwtAuthManager : IJwtAuthManager
     {
         var shouldAddAudienceClaim = string.IsNullOrWhiteSpace(claims?.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Aud)?.Value);
         var jwtToken = new JwtSecurityToken(
-            _jwtTokenConfig.Issuer,
-            shouldAddAudienceClaim ? _jwtTokenConfig.Audience : string.Empty,
-            claims,
+            _jwtTokenConfig.Issuer, 
+            shouldAddAudienceClaim ? _jwtTokenConfig.Audiences.First() : string.Empty, // Use first audience as default //shouldAddAudienceClaim ? _jwtTokenConfig.Audience : string.Empty,
+            claims.Concat(_jwtTokenConfig.Audiences.Select(aud => new Claim(JwtRegisteredClaimNames.Aud, aud))), //claims,
             expires: now.AddMinutes(_jwtTokenConfig.AccessTokenExpiration),
             signingCredentials: new SigningCredentials(new SymmetricSecurityKey(_secret), SecurityAlgorithms.HmacSha256Signature));
         var accessToken = new JwtSecurityTokenHandler().WriteToken(jwtToken);
@@ -141,8 +141,8 @@ public class JwtAuthManager : IJwtAuthManager
                     ValidIssuer = _jwtTokenConfig.Issuer,
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(_secret),
-                    ValidAudience = _jwtTokenConfig.Audience,
                     ValidateAudience = true,
+                    ValidAudiences = _jwtTokenConfig.Audiences,
                     ValidateLifetime = false,
                     ClockSkew = TimeSpan.Zero
                 },

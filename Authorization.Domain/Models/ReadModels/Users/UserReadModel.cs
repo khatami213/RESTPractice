@@ -7,4 +7,5 @@ public class UserReadModel : BaseEntity
     public string Salt { get; set; }
     public string? Email { get; set; }
     public List<RoleReadModel>? Roles { get; set; }
+    public List<ProjectReadModel> Projects { get; set; }
 }

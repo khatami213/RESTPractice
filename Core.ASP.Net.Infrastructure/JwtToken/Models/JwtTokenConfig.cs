@@ -11,7 +11,7 @@ public class JwtTokenConfig
     public string Issuer { get; set; }
 
     [JsonPropertyName("audience")]
-    public string Audience { get; set; }
+    public List<string> Audiences { get; set; }
 
     [JsonPropertyName("accessTokenExpiration")]
     public int AccessTokenExpiration { get; set; }

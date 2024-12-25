@@ -18,5 +18,14 @@ public class UserMapping : IEntityTypeConfiguration<User>
             l => l.HasOne(typeof(Role)).WithMany().HasForeignKey("RoleId").HasPrincipalKey(nameof(Role.Id)),
             r => r.HasOne(typeof(User)).WithMany().HasForeignKey("UserId").HasPrincipalKey(nameof(User.Id)),
             j => j.ToTable("UserRole","sec").HasKey("UserId", "RoleId"));
+
+        builder
+        .HasMany(e => e.Projects)
+        .WithMany(e => e.Users)
+        .UsingEntity(
+            "UserProject",
+            l => l.HasOne(typeof(Project)).WithMany().HasForeignKey("ProjectId").HasPrincipalKey(nameof(Project.Id)),
+            r => r.HasOne(typeof(User)).WithMany().HasForeignKey("UserId").HasPrincipalKey(nameof(User.Id)),
+            j => j.ToTable("UserProject", "sec").HasKey("UserId", "ProjectId"));
     }
 }

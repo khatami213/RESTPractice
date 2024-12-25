@@ -42,9 +42,13 @@ public class LoginHandler : ICommandHandler<LoginCommand, LoginResult>
         return new LoginResult()
         {
             Username = user.Username,
-            Role = roleStr.ToString(),
+            Role = roles.ToList(), //roleStr.ToString(),
             AccessToken = jwtResult.AccessToken,
-            RefreshToken = jwtResult.RefreshToken
+            RefreshToken = new RefreshTokenResult
+            {
+                Token = jwtResult.RefreshToken.Token,
+                ExpiryDate = jwtResult.RefreshToken.ExpiryDate,
+            }
         };
     }
 }

@@ -19,6 +19,15 @@ public class UserReadMapping : IEntityTypeConfiguration<UserReadModel>
             r => r.HasOne(typeof(UserReadModel)).WithMany().HasForeignKey("UserId").HasPrincipalKey(nameof(UserReadModel.Id)),
             j => j.ToTable("UserRole","sec").HasKey("UserId", "RoleId"));
 
+        builder
+        .HasMany(e => e.Projects)
+        .WithMany(e => e.Users)
+        .UsingEntity(
+            "UserProject",
+            l => l.HasOne(typeof(ProjectReadModel)).WithMany().HasForeignKey("ProjectId").HasPrincipalKey(nameof(ProjectReadModel.Id)),
+            r => r.HasOne(typeof(UserReadModel)).WithMany().HasForeignKey("UserId").HasPrincipalKey(nameof(UserReadModel.Id)),
+            j => j.ToTable("UserProject", "sec").HasKey("UserId", "ProjectId"));
+
         builder.Metadata.SetNavigationAccessMode(PropertyAccessMode.Property);
     }
 }

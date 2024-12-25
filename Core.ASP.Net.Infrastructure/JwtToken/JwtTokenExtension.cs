@@ -2,6 +2,7 @@
 using Core.ASP.Net.Infrastructure.JwtToken.Models;
 using Core.Contract.Application.Jwt;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -29,7 +30,7 @@ public static class JwtTokenExtension
                 ValidIssuer = jwtTokenConfig.Issuer,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtTokenConfig.Secret)),
-                ValidAudience = jwtTokenConfig.Audience,
+                ValidAudiences = jwtTokenConfig.Audiences,
                 ValidateAudience = true,
                 ValidateLifetime = false,
                 ClockSkew = TimeSpan.Zero

@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 
 namespace Authentication.Controllers;
 
@@ -18,13 +19,21 @@ public class AccountController : ControllerBase
 {
     private readonly ILogger<AccountController> _logger;
     private readonly IUserService _userService;
+    private readonly IRoleService _roleService;
+    private readonly IPermissionService _permissionService;
     private readonly IJwtAuthManager _jwtAuthManager;
 
-    public AccountController(ILogger<AccountController> logger, IUserService userService, IJwtAuthManager jwtAuthManager)
+    public AccountController(ILogger<AccountController> logger,
+        IUserService userService,
+        IJwtAuthManager jwtAuthManager,
+        IRoleService roleService,
+        IPermissionService permissionService)
     {
         _logger = logger;
         _userService = userService;
         _jwtAuthManager = jwtAuthManager;
+        _roleService = roleService;
+        _permissionService = permissionService;
     }
 
     [AllowAnonymous]
@@ -38,16 +47,33 @@ public class AccountController : ControllerBase
         if (user is null)
             return Ok(new { status = false, message = "نام کاربری شما اشتباه می باشد." });
 
+        var userRolesPermissions = await _userService.GetRolesPermissions(request.Username);
+
         var roleStr = new StringBuilder();
-        var roles = await _userService.GetUserRole(request.Username);
+        var roles = userRolesPermissions.Roles.Select(x => x.Name);
         foreach (var role in roles)
             roleStr.Append($"{role},");
+
+        if (roleStr.Length > 0)
+            roleStr.Remove(roleStr.Length - 1, 1);
+
+        var permissionStr = new StringBuilder();
+        var permissions = userRolesPermissions.Roles.SelectMany(x => x.Permissions).Select(p => p.Title).Distinct();
+        foreach (var permission in permissions)
+            permissionStr.Append($"{permission},");
+
+        if (permissionStr.Length > 0)
+            permissionStr.Remove(permissionStr.Length - 1, 1);
+
+        var projects = userRolesPermissions.Projects.Select(x => new Project { Name = x.Name, Description = x.Description, Icon = x.Icon, Route = x.Route }).ToList();
 
         var claims = new[]
         {
                 new Claim(ClaimTypes.Name,request.Username),
                 new Claim(ClaimTypes.Role, roleStr.ToString()),
                 new Claim("UserId", user.Id.ToString()),
+                new Claim("Permission", permissionStr.ToString()),
+                new Claim("Projects", JsonSerializer.Serialize(projects))
         };
 
         var jwtResult = _jwtAuthManager.GenerateTokens(request.Username, claims, DateTime.Now);
@@ -57,23 +83,31 @@ public class AccountController : ControllerBase
         return Ok(new LoginResult
         {
             Username = user.Username,
-            Role = roleStr.ToString(),
+            Role = roles.ToList(), //roleStr.ToString(),
+            Permission = permissions.ToList(), //permissionStr.ToString(),
             AccessToken = jwtResult.AccessToken,
-            RefreshToken = jwtResult.RefreshToken
+            RefreshToken = new RefreshTokenResult
+            {
+                Token = jwtResult.RefreshToken.Token,
+                ExpiryDate = jwtResult.RefreshToken.ExpiryDate
+            },
+            Projects = projects
         });
     }
 
-    //[HttpGet("user")]
-    //[Authorize]
-    //public ActionResult GetCurrentUser()
-    //{
-    //    return Ok(new LoginResult
-    //    {
-    //        Username = User.Identity?.Name,
-    //        Role = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty,
-    //        OriginalUserName = User.FindFirst("OriginalUserName")?.Value
-    //    });
-    //}
+    [HttpGet("userinfo")]
+    [Authorize]
+    public ActionResult GetCurrentUser()
+    {
+        var roles = User.FindFirst(ClaimTypes.Role)?.Value.Split(',');
+        var permissions = User.Claims.FirstOrDefault(c => c.Type == "Permission")?.Value.Split(',');
+        return Ok(new LoginResult
+        {
+            Username = User.Identity?.Name,
+            Role = roles.ToList(),
+            Permission = permissions.ToList(),
+        });
+    }
 
     [HttpPost("logout")]
     public ActionResult Logout()
@@ -107,7 +141,11 @@ public class AccountController : ControllerBase
                 //Username = userName,
                 //Role = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty,
                 AccessToken = jwtResult.AccessToken,
-                RefreshToken = jwtResult.RefreshToken
+                RefreshToken = new RefreshTokenResult
+                {
+                    Token = jwtResult.RefreshToken.Token,
+                    ExpiryDate = jwtResult.RefreshToken.ExpiryDate
+                }
             });
         }
         catch (SecurityTokenException e)
